@@ -9,7 +9,10 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "render:products": "node scripts/render-products.mjs",
-    "db:seed:generate": "tsx scripts/generate-seed.ts"
+    "db:seed:generate": "tsx scripts/generate-seed.ts",
+    "test:db": "bash scripts/test-db.sh",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "test:unit": "tsx --conditions=react-server tests/webhook-signature.test.ts"
   },
   "engines": {
     "node": ">=20"
