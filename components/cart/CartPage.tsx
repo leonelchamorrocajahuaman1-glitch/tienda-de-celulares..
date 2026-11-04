@@ -6,11 +6,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCartQuote } from "@/components/cart/useCartQuote";
 import { QtyStepper } from "@/components/store/QtyStepper";
-import { MAX_QTY, cartSubtotal, useCart } from "@/lib/cart-store";
+import { MAX_QTY, cartSubtotal, useCart, useCartHydrated } from "@/lib/cart-store";
 import { formatPEN } from "@/lib/format";
 
 export function CartPage({ freeShippingFrom }: { freeShippingFrom: number }) {
-  const { items, hydrated, setQty, remove } = useCart();
+  const { items, setQty, remove } = useCart();
+  const hydrated = useCartHydrated();
   const notice = useCartQuote();
   const subtotal = cartSubtotal(items);
   const [code, setCode] = useState("");

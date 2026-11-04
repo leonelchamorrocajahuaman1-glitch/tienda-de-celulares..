@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useCart } from "@/lib/cart-store";
+import { useCart, useCartHydrated } from "@/lib/cart-store";
 
 /**
  * Refresca precio y stock vigentes del carrito desde el servidor.
@@ -9,7 +9,7 @@ import { useCart } from "@/lib/cart-store";
  */
 export function useCartQuote() {
   const items = useCart((s) => s.items);
-  const hydrated = useCart((s) => s.hydrated);
+  const hydrated = useCartHydrated();
   const [notice, setNotice] = useState<string | null>(null);
   const ids = items.map((i) => i.variantId).sort().join(",");
 

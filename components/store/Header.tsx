@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/ui/Logo";
-import { cartCount, useCart } from "@/lib/cart-store";
+import { cartCount, useCart, useCartHydrated } from "@/lib/cart-store";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -30,7 +30,7 @@ export function Header({ user, announcement }: { user: HeaderUser | null; announ
   const pathname = usePathname();
   const router = useRouter();
   const items = useCart((s) => s.items);
-  const hydrated = useCart((s) => s.hydrated);
+  const hydrated = useCartHydrated();
   const setOpen = useCart((s) => s.setOpen);
   const count = hydrated ? cartCount(items) : 0;
 

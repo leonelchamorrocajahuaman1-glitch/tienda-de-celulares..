@@ -263,7 +263,6 @@ create table if not exists public.orders (
   receipt_number   text unique,
   tracking_code    text,
   notes            text check (char_length(notes) <= 500),
-  admin_notes      text,
   paid_at          timestamptz,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
@@ -273,6 +272,13 @@ create index if not exists orders_status_idx on public.orders(status);
 create index if not exists orders_created_idx on public.orders(created_at desc);
 create trigger orders_updated_at before update on public.orders
   for each row execute function public.set_updated_at();
+
+-- Notas internas del equipo: tabla separada para que el cliente nunca pueda leerlas
+create table if not exists public.order_internal_notes (
+  order_id    uuid primary key references public.orders(id) on delete cascade,
+  notes       text not null default '' check (char_length(notes) <= 4000),
+  updated_at  timestamptz not null default now()
+);
 
 create table if not exists public.order_items (
   id            uuid primary key default gen_random_uuid(),

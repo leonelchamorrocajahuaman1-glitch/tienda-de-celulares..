@@ -97,6 +97,7 @@ alter table public.cart_items            enable row level security;
 alter table public.coupons               enable row level security;
 alter table public.orders                enable row level security;
 alter table public.order_items           enable row level security;
+alter table public.order_internal_notes  enable row level security;
 alter table public.order_status_history  enable row level security;
 alter table public.payments              enable row level security;
 alter table public.store_settings        enable row level security;
@@ -166,6 +167,9 @@ create policy "order_history: dueño lee" on public.order_status_history for sel
 create policy "payments: dueño lee" on public.payments for select to authenticated
   using (exists (select 1 from public.orders o where o.id = order_id and (o.user_id = auth.uid() or public.is_admin())));
 
+create policy "internal_notes: solo admin" on public.order_internal_notes for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
 -- Cupones: solo admin los lista; los clientes los validan con validate_coupon().
 create policy "coupons: admin" on public.coupons for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
@@ -175,6 +179,7 @@ create policy "settings: admin actualiza" on public.store_settings for update to
   using (public.is_admin()) with check (public.is_admin());
 
 -- Defensa en profundidad: el cliente nunca escribe directamente en estas tablas.
+revoke all on public.order_internal_notes from anon;
 revoke insert, update, delete on public.orders, public.order_items, public.payments,
   public.order_status_history, public.inventory, public.inventory_movements from anon;
 revoke insert, delete on public.orders, public.order_items, public.payments,

@@ -103,6 +103,7 @@ select pg_temp.as_user('22222222-2222-4222-a222-222222222222');
 select pg_temp.check((select count(*) from public.orders) = 0, 'otro cliente no ve pedidos ajenos');
 select pg_temp.check((select count(*) from public.addresses) = 0, 'otro cliente no ve direcciones ajenas');
 select pg_temp.check((select count(*) from public.coupons) = 0, 'clientes no listan cupones');
+select pg_temp.check((select count(*) from public.variant_costs) = 0, 'clientes no ven costos');
 
 -- 9) Webhook (service_role) confirma el pago con monto menor => requiere revisión
 reset role;
@@ -124,6 +125,24 @@ select pg_temp.check((public.confirm_order_payment((select id from t_order), 'me
 select pg_temp.check((select stock from public.inventory i where i.variant_id = (select variant_id from t_stock_before))
   = (select stock - 2 from t_stock_before), 'stock no se descuenta dos veces');
 select pg_temp.check((select used_count from public.coupons where code = 'NEXWELCOME') = 1, 'uso de cupón contabilizado');
+
+-- 9b) Monto pagado menor => requiere revisión + nota interna invisible al cliente
+reset role;
+select pg_temp.as_user('11111111-1111-4111-a111-111111111111');
+create temp table t_order2 as select public.create_order(
+  (select jsonb_agg(jsonb_build_object('variant_id', id, 'quantity', 1)) from public.product_variants where sku like 'MOTO-G85%' limit 1),
+  'pickup', null, 'mercadopago') as id;
+grant select on t_order2 to public;
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', false);
+set role service_role;
+select pg_temp.check((public.confirm_order_payment((select id from t_order2), 'mercadopago', 'MP-999', 10, true) ->> 'status') = 'requires_attention',
+  'pago incompleto => requiere revisión (sin descontar stock)');
+reset role;
+select pg_temp.as_user('11111111-1111-4111-a111-111111111111');
+select pg_temp.check((select count(*) from public.order_internal_notes) = 0, 'cliente no lee notas internas');
+reset role;
+select pg_temp.check((select count(*) from public.order_internal_notes where order_id = (select id from t_order2)) = 1, 'nota interna registrada');
 
 -- 10) Admin: ve todo, ajusta inventario, cancela con reposición
 reset role;

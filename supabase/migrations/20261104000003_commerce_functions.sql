@@ -83,6 +83,8 @@ declare
   v_discount  numeric := 0;
   v_shipping  numeric := 0;
   v_coupon    record;
+  v_coupon_id uuid;
+  v_coupon_code text;
   v_count     int;
   it          record;
 begin
@@ -166,6 +168,8 @@ begin
       raise exception '%', v_coupon.message using errcode = '22023';
     end if;
     v_discount := v_coupon.discount;
+    v_coupon_id := v_coupon.coupon_id;
+    v_coupon_code := v_coupon.code;
   end if;
 
   select * into v_settings from public.store_settings where id = 1;
@@ -181,7 +185,7 @@ begin
     customer_phone, document_type, document_number, receipt_type, notes
   ) values (
     v_uid, v_subtotal, v_discount, v_shipping, greatest(v_subtotal - v_discount + v_shipping, 0),
-    v_coupon.coupon_id, v_coupon.code,
+    v_coupon_id, v_coupon_code,
     p_shipping_method,
     case when v_address.id is null then null else jsonb_build_object(
       'label', v_address.label, 'recipient', v_address.recipient, 'phone', v_address.phone,
@@ -311,8 +315,10 @@ begin
     values (o.id, 'paid', 'Pago confirmado (' || p_provider || coalesce(' #' || p_provider_payment_id, '') || ')', v_actor);
     return jsonb_build_object('status', 'paid', 'receipt_number', v_receipt);
   else
-    update public.orders set status = 'requires_attention', paid_at = now(),
-           admin_notes = concat_ws(E'\n', admin_notes, v_problem) where id = o.id;
+    update public.orders set status = 'requires_attention', paid_at = now() where id = o.id;
+    insert into public.order_internal_notes (order_id, notes) values (o.id, v_problem)
+    on conflict (order_id) do update
+      set notes = left(concat_ws(E'\n', public.order_internal_notes.notes, excluded.notes), 4000), updated_at = now();
     insert into public.order_status_history (order_id, status, note, created_by)
     values (o.id, 'requires_attention', v_problem, v_actor);
     return jsonb_build_object('status', 'requires_attention', 'problem', v_problem);

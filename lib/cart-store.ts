@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -24,7 +25,6 @@ export const MAX_QTY = 10;
 interface CartState {
   items: CartItem[];
   open: boolean;
-  hydrated: boolean;
   add: (item: Omit<CartItem, "quantity">, qty?: number) => void;
   setQty: (variantId: string, qty: number) => void;
   remove: (variantId: string) => void;
@@ -40,7 +40,6 @@ export const useCart = create<CartState>()(
     (set) => ({
       items: [],
       open: false,
-      hydrated: false,
       add: (item, qty = 1) =>
         set((s) => {
           const existing = s.items.find((i) => i.variantId === item.variantId);
@@ -70,9 +69,6 @@ export const useCart = create<CartState>()(
       version: 1,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ items: s.items }),
-      onRehydrateStorage: () => () => {
-        useCart.setState({ hydrated: true });
-      },
     },
   ),
 );
@@ -82,4 +78,14 @@ export function cartSubtotal(items: CartItem[]) {
 }
 export function cartCount(items: CartItem[]) {
   return items.reduce((s, i) => s + i.quantity, 0);
+}
+
+/** true cuando el carrito ya se restauró desde localStorage (evita parpadeos e hidrataciones inconsistentes). */
+export function useCartHydrated() {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(useCart.persist.hasHydrated());
+    return useCart.persist.onFinishHydration(() => setHydrated(true));
+  }, []);
+  return hydrated;
 }

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { type Address, AddressForm } from "@/components/account/AddressForm";
 import { useCartQuote } from "@/components/cart/useCartQuote";
-import { cartSubtotal, useCart } from "@/lib/cart-store";
+import { cartSubtotal, useCart, useCartHydrated } from "@/lib/cart-store";
 import { formatPEN } from "@/lib/format";
 import type { PaymentMethod, ShippingMethod, StoreSettings } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -58,7 +58,8 @@ function Option({ active, onClick, icon: Icon, title, desc, right, disabled }: {
 
 export function CheckoutForm({ addresses: initialAddresses, settings, profile, mercadoPagoEnabled, testMode }: Props) {
   const router = useRouter();
-  const { items, hydrated, clear } = useCart();
+  const { items, clear } = useCart();
+  const hydrated = useCartHydrated();
   const notice = useCartQuote();
   const [addresses, setAddresses] = useState(initialAddresses);
   const [addressId, setAddressId] = useState<string | null>(

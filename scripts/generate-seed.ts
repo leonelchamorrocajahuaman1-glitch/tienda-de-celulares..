@@ -51,6 +51,10 @@ for (const p of seedProducts) {
         q(v.compare_at_price), v.is_default, v.position,
       ].join(", ")}) on conflict (sku) do nothing;`,
     );
+    // Costo referencial (80% del precio) para el cálculo de ganancias; editable en /admin
+    out.push(
+      `insert into public.variant_costs (variant_id, cost_price) values (${q(v.id)}, ${Math.round(v.price * 0.8)}) on conflict (variant_id) do nothing;`,
+    );
     if (v.stock > 0) {
       out.push(
         `update public.inventory set stock = ${v.stock} where variant_id = ${q(v.id)} and stock = 0 and not exists (select 1 from public.inventory_movements m where m.variant_id = ${q(v.id)});`,

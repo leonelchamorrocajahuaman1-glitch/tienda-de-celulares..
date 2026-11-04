@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { type CartItem, useCart } from "@/lib/cart-store";
+import { type CartItem, useCart, useCartHydrated } from "@/lib/cart-store";
 
 /**
  * Sincroniza el carrito local con Supabase cuando hay sesión:
@@ -9,7 +9,7 @@ import { type CartItem, useCart } from "@/lib/cart-store";
  */
 export function CartSync({ loggedIn }: { loggedIn: boolean }) {
   const items = useCart((s) => s.items);
-  const hydrated = useCart((s) => s.hydrated);
+  const hydrated = useCartHydrated();
   const ready = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
