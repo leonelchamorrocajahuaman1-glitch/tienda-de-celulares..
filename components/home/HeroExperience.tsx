@@ -53,7 +53,7 @@ export function HeroExperience({ product }: { product: HeroProduct }) {
           const s = stage.current;
           const base = desktop
             ? { x: 1.05, y: 0, scale: 1, rotY: -0.45, rotX: 0.08 }
-            : { x: 0, y: -0.62, scale: 0.62, rotY: -0.35, rotX: 0.05 };
+            : { x: 0, y: -0.98, scale: 0.52, rotY: -0.35, rotX: 0.05 };
           Object.assign(s, base);
 
           // Movimiento reducido: solo el panel principal, sin animaciones ligadas al scroll
@@ -70,7 +70,7 @@ export function HeroExperience({ product }: { product: HeroProduct }) {
           });
           tl.to(".hero-panel-1", { autoAlpha: 0, y: -70, duration: 0.5 }, 0.15)
             .to(".hero-scroll-cue", { autoAlpha: 0, duration: 0.2 }, 0)
-            .to(s, { rotY: Math.PI + 0.4, x: desktop ? -1.05 : 0, y: desktop ? 0 : -0.55, duration: 1.1 }, 0.15)
+            .to(s, { rotY: Math.PI + 0.4, x: desktop ? -1.05 : 0, y: desktop ? 0 : -0.9, duration: 1.1 }, 0.15)
             .fromTo(".hero-panel-2", { autoAlpha: 0, y: 70 }, { autoAlpha: 1, y: 0, duration: 0.5 }, 0.75)
             .to(".hero-panel-2", { autoAlpha: 0, y: -70, duration: 0.5 }, 1.6)
             .to(
@@ -79,7 +79,7 @@ export function HeroExperience({ product }: { product: HeroProduct }) {
                 rotY: Math.PI * 1.5 + 0.25,
                 rotX: 0.18,
                 x: desktop ? 1.15 : 0,
-                scale: desktop ? 1.18 : 0.7,
+                scale: desktop ? 1.18 : 0.6,
                 glow: 1.6,
                 duration: 1.1,
               },

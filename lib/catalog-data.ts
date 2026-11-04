@@ -580,7 +580,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
 ];
 
-export const RENDER_VIEWS = ["front", "back", "side"] as const;
+export const RENDER_VIEWS = ["back", "front", "side"] as const;
 export type RenderView = (typeof RENDER_VIEWS)[number];
 
 export function slugify(s: string): string {

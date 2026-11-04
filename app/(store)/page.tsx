@@ -122,9 +122,9 @@ export default async function HomePage() {
               <h3 className="mt-3 font-display text-2xl font-semibold">{topOffer.p.name}</h3>
               <p className="mt-1 text-sm text-zinc-300">Desde {formatPEN(minPrice(topOffer.p))}</p>
               <div className="relative mx-auto mt-6 aspect-square w-3/4">
-                {imagesForColor(topOffer.p, topOffer.p.variants[0]?.color_name)[1] && (
+                {imagesForColor(topOffer.p, topOffer.p.variants[0]?.color_name)[0] && (
                   <Image
-                    src={imagesForColor(topOffer.p, topOffer.p.variants[0]?.color_name)[1].url}
+                    src={imagesForColor(topOffer.p, topOffer.p.variants[0]?.color_name)[0].url}
                     alt={topOffer.p.name}
                     fill
                     sizes="(max-width: 1024px) 70vw, 30vw"
