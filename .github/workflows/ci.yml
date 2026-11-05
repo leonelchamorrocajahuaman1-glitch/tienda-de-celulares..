@@ -37,5 +37,5 @@ jobs:
           psql -d pay_ci -q -f supabase/tests/00_supabase_stub.sql
           DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pay_ci node scripts/db-setup.mjs
           TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pay_ci npm run test:payments
-      - name: Build de producción
+      - name: Build de producción (conectado a Supabase con la clave pública)
         run: npm run build:app

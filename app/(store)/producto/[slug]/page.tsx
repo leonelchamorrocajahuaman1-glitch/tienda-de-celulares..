@@ -10,8 +10,14 @@ import { primaryImage } from "@/lib/product-helpers";
 export const revalidate = 60;
 
 export async function generateStaticParams() {
-  const products = await getAllProducts();
-  return products.map((p) => ({ slug: p.slug }));
+  try {
+    const products = await getAllProducts();
+    return products.map((p) => ({ slug: p.slug }));
+  } catch (e) {
+    // Si la BD no responde durante el build, las fichas se generan bajo demanda
+    console.warn("[build] catálogo no disponible para prerender:", (e as Error).message);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

@@ -8,7 +8,7 @@ import { getBrands, getStoreSettings } from "@/lib/data/catalog";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const [session, settings, brands] = await Promise.all([getSession(), getStoreSettings(), getBrands()]);
+  const [session, settings, brands] = await Promise.all([getSession(), getStoreSettings(), getBrands().catch(() => [])]);
   const user = session
     ? {
         name: session.profile?.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Mi cuenta",

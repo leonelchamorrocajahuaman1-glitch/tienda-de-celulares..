@@ -27,7 +27,8 @@ function SectionHead({ eyebrow, title, href, cta }: { eyebrow: string; title: Re
 }
 
 export default async function HomePage() {
-  const [products, brands] = await Promise.all([getAllProducts(), getBrands()]);
+  // Si la BD no responde (p. ej. durante el build), se muestra la portada sin listados y se regenera en 60 s
+  const [products, brands] = await Promise.all([getAllProducts().catch(() => []), getBrands().catch(() => [])]);
   const hero = products.find((p) => p.is_featured && p.slug.includes("pro")) ?? products.find((p) => p.is_featured) ?? products[0];
   const bestsellers = [...products].sort((a, b) => b.sold_count - a.sold_count).slice(0, 4);
   const launches = products.filter((p) => p.is_new).sort((a, b) => (b.release_date ?? "").localeCompare(a.release_date ?? ""));

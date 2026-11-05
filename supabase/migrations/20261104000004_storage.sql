@@ -14,9 +14,13 @@ on conflict (id) do update
       file_size_limit = excluded.file_size_limit,
       allowed_mime_types = excluded.allowed_mime_types;
 
+-- Los buckets son públicos: las URLs públicas funcionan sin política de lectura.
+-- Listar/consultar objetos por la API queda reservado a administradores (evita enumerar archivos).
 drop policy if exists "nexphone: lectura pública de medios" on storage.objects;
-create policy "nexphone: lectura pública de medios" on storage.objects
-  for select using (bucket_id in ('product-images', 'product-models'));
+drop policy if exists "nexphone: admin lista medios" on storage.objects;
+create policy "nexphone: admin lista medios" on storage.objects
+  for select to authenticated
+  using (bucket_id in ('product-images', 'product-models') and public.is_admin());
 
 drop policy if exists "nexphone: admin sube medios" on storage.objects;
 create policy "nexphone: admin sube medios" on storage.objects
