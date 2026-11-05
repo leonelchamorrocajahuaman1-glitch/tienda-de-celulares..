@@ -2,7 +2,10 @@
 
 import { ContactShadows } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
+import { GLBPhone } from "@/components/three/GLBPhone";
 import { PhoneModel } from "@/components/three/PhoneModel";
 import { StudioLights } from "@/components/three/StudioLights";
 import type { CameraPreset } from "@/lib/catalog-data";
@@ -19,7 +22,7 @@ interface Shot {
   color: string;
   id: number;
 }
-type StudioWindow = Window & { __renderReady?: number; __setShot?: (s: Omit<Shot, "id">) => void };
+type StudioWindow = Window & { __renderReady?: number; __setShot?: (s: Omit<Shot, "id">) => void; __exportGLB?: () => Promise<string> };
 
 function ReadySignal({ id }: { id: number }) {
   const frames = useRef(0);
@@ -33,10 +36,27 @@ function ReadySignal({ id }: { id: number }) {
   return null;
 }
 
-export function StudioRender({ preset, view, color }: { preset: CameraPreset; view: string; color: string }) {
+export function StudioRender({ preset, view, color, glb }: { preset: CameraPreset; view: string; color: string; glb?: string }) {
   const [shot, setShot] = useState<Shot>({ preset, view, color, id: 1 });
+  const phone = useRef<THREE.Group>(null);
   useEffect(() => {
     (window as StudioWindow).__setShot = (s) => setShot((prev) => ({ ...s, id: prev.id + 1 }));
+    // Exporta el modelo procedural a GLB binario estándar (prueba de compatibilidad / modelo de referencia)
+    (window as StudioWindow).__exportGLB = () =>
+      new Promise((resolve, reject) => {
+        if (!phone.current) return reject(new Error("sin modelo"));
+        new GLTFExporter().parse(
+          phone.current,
+          (res) => {
+            const bytes = new Uint8Array(res as ArrayBuffer);
+            let bin = "";
+            for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+            resolve(btoa(bin));
+          },
+          reject,
+          { binary: true },
+        );
+      });
   }, []);
   return (
     <div style={{ width: 900, height: 1100, background: "transparent" }} id="studio">
@@ -49,7 +69,13 @@ export function StudioRender({ preset, view, color }: { preset: CameraPreset; vi
       >
         <StudioLights />
         <group rotation={ROT[shot.view]} position={[0, 0.08, 0]}>
-          <PhoneModel key={shot.preset} color={shot.color} preset={shot.preset} instantColor />
+          {glb ? (
+            <Suspense fallback={null}>
+              <GLBPhone url={glb} color={shot.color} />
+            </Suspense>
+          ) : (
+            <PhoneModel ref={phone} key={shot.preset} color={shot.color} preset={shot.preset} instantColor />
+          )}
         </group>
         <ContactShadows position={[0, -0.92, 0]} opacity={0.55} scale={4} blur={2.6} far={1.5} frames={Infinity} />
         <ReadySignal id={shot.id} />

@@ -215,6 +215,11 @@ export const PhoneModel = forwardRef<THREE.Group, PhoneModelProps>(function Phon
       clearcoat: 1,
       clearcoatRoughness: 0.03,
     });
+    // Nombres estándar: permiten teñir por variante los GLB exportados o subidos (ver GLBPhone)
+    frame.name = "frame";
+    back.name = "back";
+    bump.name = "body";
+    frontGlass.name = "screen-glass";
     return { frame, back, frontGlass, ring, darkRing, lensGlass, coating, flash, bump };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
