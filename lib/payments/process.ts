@@ -16,10 +16,16 @@ const MAP: Record<string, "pending" | "in_process" | "rejected" | "cancelled" | 
  * Procesa un pago consultándolo directamente en la API de Mercado Pago (fuente de verdad).
  * Idempotente: puede llamarse desde el webhook y desde la página de resultado.
  */
-export async function processMercadoPagoPayment(paymentId: string, expectedOrderId?: string) {
-  const admin = getServiceSupabase();
+type RpcClient = { rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }> };
+
+export async function processMercadoPagoPayment(
+  paymentId: string,
+  expectedOrderId?: string,
+  deps: { admin?: RpcClient; fetchPayment?: (id: string) => Promise<MPPayment> } = {},
+) {
+  const admin = deps.admin ?? (getServiceSupabase() as unknown as RpcClient | null);
   if (!admin) throw new Error("SUPABASE_SERVICE_ROLE_KEY no configurada");
-  const payment: MPPayment = await getPayment(paymentId);
+  const payment: MPPayment = await (deps.fetchPayment ?? getPayment)(paymentId);
   const orderId = payment.external_reference;
   if (!orderId || !/^[0-9a-f-]{36}$/i.test(orderId)) return { ok: false, reason: "sin referencia" as const };
   if (expectedOrderId && orderId !== expectedOrderId) return { ok: false, reason: "referencia distinta" as const };

@@ -103,78 +103,105 @@ alter table public.payments              enable row level security;
 alter table public.store_settings        enable row level security;
 
 -- ---------- profiles ----------
+drop policy if exists "profiles: leer el propio" on public.profiles;
 create policy "profiles: leer el propio" on public.profiles
   for select to authenticated using (id = auth.uid() or public.is_admin());
+drop policy if exists "profiles: actualizar el propio" on public.profiles;
 create policy "profiles: actualizar el propio" on public.profiles
   for update to authenticated using (id = auth.uid() or public.is_admin())
   with check (id = auth.uid() or public.is_admin());
 
 -- ---------- catálogo: lectura pública, escritura solo admin ----------
+drop policy if exists "brands: lectura pública" on public.brands;
 create policy "brands: lectura pública" on public.brands for select using (true);
+drop policy if exists "brands: admin" on public.brands;
 create policy "brands: admin" on public.brands for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+drop policy if exists "categories: lectura pública" on public.categories;
 create policy "categories: lectura pública" on public.categories for select using (true);
+drop policy if exists "categories: admin" on public.categories;
 create policy "categories: admin" on public.categories for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+drop policy if exists "products: lectura de activos" on public.products;
 create policy "products: lectura de activos" on public.products for select
   using (is_active or public.is_admin());
+drop policy if exists "products: admin" on public.products;
 create policy "products: admin" on public.products for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+drop policy if exists "variants: lectura de activas" on public.product_variants;
 create policy "variants: lectura de activas" on public.product_variants for select
   using ((is_active and exists (select 1 from public.products p where p.id = product_id and p.is_active))
          or public.is_admin());
+drop policy if exists "variants: admin" on public.product_variants;
 create policy "variants: admin" on public.product_variants for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+drop policy if exists "images: lectura pública" on public.product_images;
 create policy "images: lectura pública" on public.product_images for select
   using (exists (select 1 from public.products p where p.id = product_id and (p.is_active or public.is_admin())));
+drop policy if exists "images: admin" on public.product_images;
 create policy "images: admin" on public.product_images for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
 -- El stock es visible (disponibilidad), pero SOLO se modifica mediante funciones seguras.
+drop policy if exists "inventory: lectura pública" on public.inventory;
 create policy "inventory: lectura pública" on public.inventory for select using (true);
 
+drop policy if exists "movements: admin lee" on public.inventory_movements;
 create policy "movements: admin lee" on public.inventory_movements for select to authenticated
   using (public.is_admin());
 
 -- ---------- datos del cliente ----------
+drop policy if exists "addresses: dueño" on public.addresses;
 create policy "addresses: dueño" on public.addresses for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "addresses: admin lee" on public.addresses;
 create policy "addresses: admin lee" on public.addresses for select to authenticated
   using (public.is_admin());
 
+drop policy if exists "carts: dueño" on public.carts;
 create policy "carts: dueño" on public.carts for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "cart_items: dueño" on public.cart_items;
 create policy "cart_items: dueño" on public.cart_items for all to authenticated
   using (exists (select 1 from public.carts c where c.id = cart_id and c.user_id = auth.uid()))
   with check (exists (select 1 from public.carts c where c.id = cart_id and c.user_id = auth.uid()));
 
 -- Pedidos: el cliente solo LEE los suyos. Se crean exclusivamente vía create_order().
+drop policy if exists "orders: dueño lee" on public.orders;
 create policy "orders: dueño lee" on public.orders for select to authenticated
   using (user_id = auth.uid() or public.is_admin());
+drop policy if exists "orders: admin actualiza" on public.orders;
 create policy "orders: admin actualiza" on public.orders for update to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+drop policy if exists "order_items: dueño lee" on public.order_items;
 create policy "order_items: dueño lee" on public.order_items for select to authenticated
   using (exists (select 1 from public.orders o where o.id = order_id and (o.user_id = auth.uid() or public.is_admin())));
 
+drop policy if exists "order_history: dueño lee" on public.order_status_history;
 create policy "order_history: dueño lee" on public.order_status_history for select to authenticated
   using (exists (select 1 from public.orders o where o.id = order_id and (o.user_id = auth.uid() or public.is_admin())));
 
+drop policy if exists "payments: dueño lee" on public.payments;
 create policy "payments: dueño lee" on public.payments for select to authenticated
   using (exists (select 1 from public.orders o where o.id = order_id and (o.user_id = auth.uid() or public.is_admin())));
 
+drop policy if exists "internal_notes: solo admin" on public.order_internal_notes;
 create policy "internal_notes: solo admin" on public.order_internal_notes for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
 -- Cupones: solo admin los lista; los clientes los validan con validate_coupon().
+drop policy if exists "coupons: admin" on public.coupons;
 create policy "coupons: admin" on public.coupons for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+drop policy if exists "settings: lectura pública" on public.store_settings;
 create policy "settings: lectura pública" on public.store_settings for select using (true);
+drop policy if exists "settings: admin actualiza" on public.store_settings;
 create policy "settings: admin actualiza" on public.store_settings for update to authenticated
   using (public.is_admin()) with check (public.is_admin());
 

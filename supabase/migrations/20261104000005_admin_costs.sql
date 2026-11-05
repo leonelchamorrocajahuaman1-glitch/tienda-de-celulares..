@@ -8,6 +8,7 @@ create table if not exists public.variant_costs (
   updated_at timestamptz not null default now()
 );
 alter table public.variant_costs enable row level security;
+drop policy if exists "variant_costs: admin" on public.variant_costs;
 create policy "variant_costs: admin" on public.variant_costs for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 revoke all on public.variant_costs from anon;

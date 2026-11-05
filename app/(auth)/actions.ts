@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { maybeBootstrapAdmin } from "@/lib/bootstrap-admin";
 import { siteUrl } from "@/lib/env";
 import { safeNext } from "@/lib/safe-redirect";
 import { getServerSupabase } from "@/lib/supabase/server";
@@ -30,14 +31,15 @@ export async function signInAction(_: FormState, fd: FormData): Promise<FormStat
     password: fd.get("password"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message, fields: { email: String(fd.get("email") ?? "") } };
-  const { error } = await sb.auth.signInWithPassword(parsed.data);
+  const { data: signed, error } = await sb.auth.signInWithPassword(parsed.data);
   if (error) {
     const msg = /confirm/i.test(error.message)
       ? "Confirma tu correo antes de ingresar."
       : "Correo o contraseña incorrectos.";
     return { error: msg, fields: { email: parsed.data.email } };
   }
-  redirect(safeNext(fd.get("next")));
+  const promoted = (await maybeBootstrapAdmin(signed.user?.email)) === "promovido";
+  redirect(promoted ? "/admin" : safeNext(fd.get("next")));
 }
 
 export async function signUpAction(_: FormState, fd: FormData): Promise<FormState> {
@@ -70,7 +72,11 @@ export async function signUpAction(_: FormState, fd: FormData): Promise<FormStat
   if (error) {
     return { error: /registered|exists/i.test(error.message) ? "Ya existe una cuenta con ese correo." : "No se pudo crear la cuenta. Inténtalo nuevamente.", fields };
   }
-  if (data.session) redirect(safeNext(fd.get("next")));
+  if (data.session) {
+    // Confirmación de correo desactivada en Supabase: la sesión es inmediata
+    const promoted = (await maybeBootstrapAdmin(data.user?.email)) === "promovido";
+    redirect(promoted ? "/admin" : safeNext(fd.get("next")));
+  }
   return { success: "¡Cuenta creada! Te enviamos un correo para confirmar tu dirección." };
 }
 

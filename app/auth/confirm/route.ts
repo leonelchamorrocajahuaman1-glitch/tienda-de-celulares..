@@ -1,5 +1,6 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { maybeBootstrapAdmin } from "@/lib/bootstrap-admin";
 import { safeNext } from "@/lib/safe-redirect";
 import { getServerSupabase } from "@/lib/supabase/server";
 
@@ -11,8 +12,11 @@ export async function GET(request: NextRequest) {
   const next = safeNext(url.searchParams.get("next"));
   const sb = await getServerSupabase();
   if (token_hash && type && sb) {
-    const { error } = await sb.auth.verifyOtp({ type, token_hash });
-    if (!error) return NextResponse.redirect(new URL(type === "recovery" ? "/actualizar-clave" : next, url.origin));
+    const { data, error } = await sb.auth.verifyOtp({ type, token_hash });
+    if (!error) {
+      const promoted = (await maybeBootstrapAdmin(data.user?.email)) === "promovido";
+      return NextResponse.redirect(new URL(type === "recovery" ? "/actualizar-clave" : promoted ? "/admin" : next, url.origin));
+    }
   }
   return NextResponse.redirect(new URL("/ingresar?error=enlace-invalido", url.origin));
 }

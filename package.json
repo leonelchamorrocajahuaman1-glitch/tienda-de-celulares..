@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/db-setup.mjs --if-configured && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -12,7 +12,10 @@
     "db:seed:generate": "tsx scripts/generate-seed.ts",
     "test:db": "bash scripts/test-db.sh",
     "test:smoke": "node scripts/smoke-test.mjs",
-    "test:unit": "tsx --conditions=react-server tests/webhook-signature.test.ts"
+    "test:unit": "tsx --conditions=react-server tests/webhook-signature.test.ts",
+    "build:app": "next build",
+    "db:setup": "node scripts/db-setup.mjs",
+    "test:payments": "tsx --conditions=react-server tests/payments.integration.test.ts"
   },
   "engines": {
     "node": ">=20"
@@ -31,6 +34,7 @@
     "gsap": "^3.13.0",
     "lucide-react": "^0.544.0",
     "next": "^15.5.29",
+    "pg": "^8.16.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "recharts": "^3.2.1",
