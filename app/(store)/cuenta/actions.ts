@@ -16,7 +16,7 @@ const addressSchema = z.object({
   label: z.string().trim().min(1).max(40).default("Casa"),
   recipient: z.string().trim().min(2, "Ingresa el nombre de quien recibe").max(120),
   phone: z.string().trim().regex(/^[+0-9 ]{6,20}$/, "Teléfono inválido"),
-  department: z.enum(PERU_DEPARTMENTS, { errorMap: () => ({ message: "Selecciona un departamento" }) }),
+  department: z.enum(PERU_DEPARTMENTS, { error: "Selecciona un departamento" }),
   province: z.string().trim().min(2, "Ingresa la provincia").max(60),
   district: z.string().trim().min(2, "Ingresa el distrito").max(60),
   line1: z.string().trim().min(4, "Ingresa la dirección").max(200),

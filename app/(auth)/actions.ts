@@ -52,7 +52,7 @@ export async function signUpAction(_: FormState, fd: FormData): Promise<FormStat
       email,
       password,
       confirm: z.string(),
-      terms: z.literal("on", { errorMap: () => ({ message: "Debes aceptar los términos y la política de privacidad" }) }),
+      terms: z.literal("on", { error: "Debes aceptar los términos y la política de privacidad" }),
     })
     .refine((d) => d.password === d.confirm, { message: "Las contraseñas no coinciden", path: ["confirm"] });
   const raw = Object.fromEntries(["full_name", "phone", "email", "password", "confirm", "terms"].map((k) => [k, fd.get(k) ?? ""]));

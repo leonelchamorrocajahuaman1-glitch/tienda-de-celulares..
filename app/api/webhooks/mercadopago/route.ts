@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { mpConfigured, verifyWebhookSignature } from "@/lib/payments/mercadopago";
 import { processMercadoPagoPayment } from "@/lib/payments/process";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 /**
  * Webhook de Mercado Pago. Seguridad:
  * 1) Firma HMAC (x-signature) obligatoria en producción.

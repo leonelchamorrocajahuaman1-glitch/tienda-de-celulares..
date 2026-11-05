@@ -26,34 +26,36 @@ animaciones GSAP, panel administrativo independiente y backend Supabase con segu
 **Panel administrativo (`/admin`)**
 Dashboard (ventas, ganancias estimadas, pedidos, productos, clientes, gráficos, más vendidos, actividad), Productos (CRUD, variantes, especificaciones, subida de imágenes y modelos 3D con vista previa), Inventario (stock, alertas, ajustes, historial), Pedidos (estados, entregas, confirmación de pagos manuales, comprobantes, notas internas), Clientes, Pagos, Promociones (cupones y ofertas), Reportes (diarios/mensuales, ingresos, ranking, exportación CSV) y Configuración (datos comerciales, contacto, envíos, marcas, categorías).
 
-## Inicio rápido (desarrollo)
+## Publicar
+
+Sigue [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md): 4 pasos (Vercel, Supabase desde Vercel, URL de autenticación y
+Mercado Pago de prueba). La base de datos, el catálogo, los buckets y el primer administrador se configuran solos.
+
+## Desarrollo local
 
 ```bash
 npm install
 ```
 
 ```bash
-cp .env.example .env.local
-```
-
-```bash
 npm run dev
 ```
 
-Sin variables de Supabase la tienda arranca en **modo vista previa**: muestra el catálogo de demostración
-(`lib/catalog-data.ts`) y deshabilita cuentas, pedidos y pagos con un aviso visible. Para la tienda real sigue
-[`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
+Sin variables de Supabase la tienda arranca en **modo vista previa** (catálogo de demostración; cuentas, pedidos y
+pagos desactivados con aviso). Variables: ver `.env.example`.
 
-## Scripts
+## Calidad y pruebas
 
-| Comando | Qué hace |
+| Comando | Qué verifica |
 |---|---|
-| `npm run dev` / `build` / `start` | Desarrollo, build y servidor de producción |
-| `npm run typecheck` · `npm run lint` | Verificación de tipos y ESLint |
-| `npm run db:seed:generate` | Regenera `supabase/seed.sql` desde `lib/catalog-data.ts` |
-| `npm run test:db` | Aplica migraciones + seed en un PostgreSQL local y ejecuta 31 pruebas de seguridad y flujo de compra (requiere `PGHOST/PGPORT/PGUSER`) |
-| `npm run test:smoke` | Prueba E2E con Playwright contra la app en ejecución (`BASE_URL`) |
-| `npm run render:products` | Genera las fotos de producto (WEBP) a partir del modelo 3D (requiere `npm run dev` y Playwright) |
+| `npm test` | Tipos, ESLint, firma del webhook, validaciones (precios, cupones, redirecciones) e integridad de las 138 imágenes |
+| `npm run test:db` | 39 pruebas SQL: migraciones, RLS, flujo de compra, primer admin (requiere `PGHOST/PGPORT/PGUSER`) |
+| `npm run test:payments` | 14 pruebas de integración de pagos contra PostgreSQL con la API de Mercado Pago simulada (`TEST_DATABASE_URL`) |
+| `npm run test:smoke` / `npm run test:site` | E2E con Playwright y rastreo de rutas, imágenes, consola y móvil (`BASE_URL`) |
+| `npm run db:setup` | Crea/actualiza la BD de forma no destructiva (`DATABASE_URL`) — se ejecuta solo en cada build |
+| `npm run render:products` | Regenera las fotos de producto desde el modelo 3D |
+
+GitHub Actions (`.github/workflows/ci.yml`) ejecuta todas las pruebas y el build en cada push.
 
 ## Estructura
 

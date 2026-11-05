@@ -8,6 +8,9 @@
 
 No se usaron logotipos ni fotografías de marcas: los renders son genéricos y no reproducen el diseño exacto de ningún fabricante.
 
+## Modelos GLB de referencia
+`public/models/nexphone-{square,vertical,circle,bar}.glb`: el modelo procedural exportado a GLB estándar (≈1,5 MB). Sirven para probar la subida de modelos desde el panel; sus materiales `frame`, `back` y `body` se tiñen con el color de cada variante. Verificado con `scripts/export-reference-glb.mjs`.
+
 ## Para un acabado idéntico a cada modelo real
 Puedes subirlos desde `/admin/productos/{id}` sin tocar código:
 
