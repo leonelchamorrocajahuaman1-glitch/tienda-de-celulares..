@@ -38,12 +38,26 @@ u.searchParams.delete("sslmode");
 u.searchParams.delete("supa");
 u.searchParams.delete("pgbouncer");
 // Conexión cifrada con Supabase (el certificado del pooler no está en el almacén público de Node)
-const client = new pg.Client({ connectionString: u.toString(), ssl: local ? false : { rejectUnauthorized: false } });
+const client = new pg.Client({
+  connectionString: u.toString(),
+  ssl: local ? false : { rejectUnauthorized: false },
+  connectionTimeoutMillis: 20000,
+});
 
 const log = (...m) => console.log("[db-setup]", ...m);
 
 async function main() {
-  await client.connect();
+  try {
+    await client.connect();
+  } catch (e) {
+    const msg = `No se pudo conectar a ${u.hostname}: ${e.message}`;
+    if (args.has("--if-configured")) {
+      // En el build no se bloquea el despliegue por un problema de red; /api/health lo mostrará.
+      console.warn(`[db-setup] AVISO: ${msg}. Se omite la inicialización; revisa POSTGRES_URL_NON_POOLING/DATABASE_URL.`);
+      return;
+    }
+    throw new Error(msg);
+  }
   log(`Conectado a ${u.hostname}`);
   await client.query(`create schema if not exists nexphone_meta;
     revoke all on schema nexphone_meta from public;
