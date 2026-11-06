@@ -12,13 +12,20 @@ const { chromium } = createRequire(import.meta.url)("playwright");
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
-const page = await browser.newPage({ viewport: { width: 900, height: 1100 } });
 const errors = [];
-page.on("pageerror", (e) => errors.push(e.message));
+// Una página nueva por modelo: reutilizar el mismo contexto WebGL entre navegaciones puede bloquear el render
+async function freshPage() {
+  const p = await browser.newPage({ viewport: { width: 900, height: 1100 } });
+  p.on("pageerror", (e) => errors.push(e.message));
+  return p;
+}
 let ok = true;
+let page;
 
 for (const preset of ["square", "vertical", "circle", "bar"]) {
-  await page.goto(`${BASE}/studio?preset=${preset}&view=back&color=%238fa3b8`, { waitUntil: "networkidle" });
+  if (page) await page.close();
+  page = await freshPage();
+  await page.goto(`${BASE}/studio?preset=${preset}&view=back&color=%238fa3b8`, { waitUntil: "load", timeout: 120000 });
   await page.waitForFunction(() => window.__renderReady >= 1, null, { timeout: 120000 });
   const b64 = await page.evaluate(() => window.__exportGLB());
   const buf = Buffer.from(b64, "base64");
@@ -30,7 +37,9 @@ for (const preset of ["square", "vertical", "circle", "bar"]) {
 }
 
 // Carga del GLB en el visor de la tienda (GLBPhone) y comprobación de que dibuja píxeles
-await page.goto(`${BASE}/studio?glb=/models/nexphone-circle.glb&view=back&color=%232f6bff`, { waitUntil: "networkidle" });
+await page.close();
+page = await freshPage();
+await page.goto(`${BASE}/studio?glb=/models/nexphone-circle.glb&view=back&color=%232f6bff`, { waitUntil: "load", timeout: 120000 });
 await page.waitForFunction(() => window.__renderReady >= 1, null, { timeout: 120000 });
 await page.waitForTimeout(1500);
 const coverage = await page.evaluate(() => {
