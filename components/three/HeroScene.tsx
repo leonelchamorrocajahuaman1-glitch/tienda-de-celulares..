@@ -6,6 +6,7 @@ import { type MutableRefObject, Suspense, useEffect, useRef, useState } from "re
 import * as THREE from "three";
 import { GLBPhone } from "@/components/three/GLBPhone";
 import { PhoneModel } from "@/components/three/PhoneModel";
+import { StudioFloor } from "@/components/three/StudioFloor";
 import { StudioLights } from "@/components/three/StudioLights";
 import type { CameraPreset } from "@/lib/catalog-data";
 
@@ -97,6 +98,8 @@ export default function HeroScene({
 }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
+  const [floor, setFloor] = useState(false);
+  useEffect(() => setFloor(window.matchMedia("(min-width: 1024px)").matches && !reduced), [reduced]);
 
   // Pausar el render cuando la escena no está en pantalla (rendimiento/batería)
   useEffect(() => {
@@ -117,6 +120,7 @@ export default function HeroScene({
         aria-label="Smartphone 3D interactivo"
       >
         <StudioLights />
+        {floor && <StudioFloor y={-0.99} size={9} />}
         <StagedPhone stage={stage} color={color} preset={preset} modelUrl={modelUrl} reduced={reduced} />
       </Canvas>
     </div>

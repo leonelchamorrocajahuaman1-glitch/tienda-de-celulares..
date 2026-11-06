@@ -22,5 +22,5 @@ export default async function StudioPage({
   const view = (["front", "back", "side"].includes(sp.view ?? "") ? sp.view : "front") as "front" | "back" | "side";
   const color = /^#[0-9a-fA-F]{6}$/.test(sp.color ?? "") ? sp.color! : "#8fa3b8";
   const glb = sp.glb && /^\/models\/[a-z0-9-]+\.glb$/.test(sp.glb) ? sp.glb : undefined;
-  return <StudioRender preset={preset} view={view} color={color} glb={glb} />;
+  return <StudioRender preset={preset} view={view} color={color} glb={glb} floor={sp.floor === "1"} />;
 }

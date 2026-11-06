@@ -136,6 +136,77 @@ function brushedRoughness() {
   return t;
 }
 
+/** Convierte un mapa de alturas en un mapa normal (relieve real que reacciona a la luz). */
+function heightToNormal(size: number, height: Float32Array, strength: number, repeat: [number, number]) {
+  if (typeof document === "undefined") return null;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d")!;
+  const img = ctx.createImageData(size, size);
+  const at = (x: number, y: number) => height[((y + size) % size) * size + ((x + size) % size)];
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (at(x + 1, y) - at(x - 1, y)) * strength;
+      const dy = (at(x, y + 1) - at(x, y - 1)) * strength;
+      const len = Math.hypot(dx, dy, 1);
+      const i = (y * size + x) * 4;
+      img.data[i] = ((-dx / len) * 0.5 + 0.5) * 255;
+      img.data[i + 1] = ((dy / len) * 0.5 + 0.5) * 255;
+      img.data[i + 2] = ((1 / len) * 0.5 + 0.5) * 255;
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeat[0], repeat[1]);
+  t.anisotropy = 8;
+  return t;
+}
+
+function blur(h: Float32Array, size: number, passes: number) {
+  let a = h;
+  for (let p = 0; p < passes; p++) {
+    const b = new Float32Array(a.length);
+    for (let y = 0; y < size; y++)
+      for (let x = 0; x < size; x++) {
+        let sum = 0;
+        for (let k = -1; k <= 1; k++)
+          for (let j = -1; j <= 1; j++) sum += a[((y + k + size) % size) * size + ((x + j + size) % size)];
+        b[y * size + x] = sum / 9;
+      }
+    a = b;
+  }
+  return a;
+}
+
+/** Vidrio esmerilado: grano fino y suave (como el arenado químico del vidrio mate). */
+function frostedNormal() {
+  const S = 256;
+  const h = new Float32Array(S * S).map(() => Math.random());
+  return heightToNormal(S, blur(h, S, 2), 6, [5, 10]);
+}
+
+/** Metal cepillado: vetas lineales finas con variación. */
+function brushedNormal() {
+  const S = 256;
+  const h = new Float32Array(S * S);
+  const rows = Array.from({ length: S }, () => Math.random());
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) h[y * S + x] = rows[y] * 0.8 + Math.random() * 0.2;
+  return heightToNormal(S, h, 3, [1, 6]);
+}
+
+/** Torneado concéntrico de los biseles de lentes (líneas a lo largo del perfil de revolución). */
+function machinedNormal() {
+  const S = 128;
+  const h = new Float32Array(S * S);
+  for (let y = 0; y < S; y++) {
+    const v = Math.sin(y * 1.7) * 0.5 + Math.random() * 0.25;
+    for (let x = 0; x < S; x++) h[y * S + x] = v;
+  }
+  return heightToNormal(S, h, 2.5, [1, 4]);
+}
+
 /** Flash LED: matriz de diodos bajo difusor. */
 function flashTexture() {
   return canvasTexture(
@@ -308,7 +379,10 @@ type Mats = ReturnType<typeof createMaterials>;
 
 function createMaterials(spec: BodySpec, initial: THREE.Color) {
   const brushed = spec.brushed ? brushedRoughness() : null;
+  const brushedN = spec.brushed ? brushedNormal() : null;
   const frost = frostedRoughness();
+  const frostN = frostedNormal();
+  const machinedN = machinedNormal();
   const flashMap = flashTexture();
   const frame = new THREE.MeshPhysicalMaterial({
     name: "frame",
@@ -316,6 +390,8 @@ function createMaterials(spec: BodySpec, initial: THREE.Color) {
     metalness: 1,
     roughness: spec.brushed ? 0.34 : 0.14,
     roughnessMap: brushed,
+    normalMap: brushedN,
+    normalScale: new THREE.Vector2(0.35, 0.35),
     anisotropy: spec.brushed ? 0.8 : 0.3,
     anisotropyRotation: Math.PI / 2,
     clearcoat: spec.brushed ? 0.2 : 0.7,
@@ -328,8 +404,11 @@ function createMaterials(spec: BodySpec, initial: THREE.Color) {
     metalness: 0.12,
     roughness: spec.backRoughness,
     roughnessMap: frost,
-    clearcoat: 1,
-    clearcoatRoughness: spec.backRoughness * 0.6,
+    normalMap: frostN,
+    normalScale: new THREE.Vector2(0.22, 0.22),
+    // Acabado satinado: base mate esmerilada + capa superior que capta un barrido de luz suave
+    clearcoat: 0.65,
+    clearcoatRoughness: 0.16,
     sheen: 0.35,
     sheenRoughness: 0.6,
     sheenColor: new THREE.Color("#ffffff"),
@@ -358,7 +437,24 @@ function createMaterials(spec: BodySpec, initial: THREE.Color) {
       envMapIntensity: 1.4,
     }),
     antenna: new THREE.MeshPhysicalMaterial({ color: "#2a2c31", roughness: 0.55, metalness: 0.1 }),
-    ring: new THREE.MeshPhysicalMaterial({ color: "#d4d8df", metalness: 1, roughness: 0.12, envMapIntensity: 1.8 }),
+    ring: new THREE.MeshPhysicalMaterial({
+      color: "#d4d8df",
+      metalness: 1,
+      roughness: 0.16,
+      normalMap: machinedN,
+      normalScale: new THREE.Vector2(0.4, 0.4),
+      envMapIntensity: 1.8,
+    }),
+    // Reflejo del cristal sobre la pantalla encendida (solo suma brillo del entorno)
+    screenSheen: new THREE.MeshStandardMaterial({
+      color: "#000000",
+      metalness: 1,
+      roughness: 0.06,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      envMapIntensity: 0.55,
+    }),
     darkMetal: new THREE.MeshPhysicalMaterial({ color: "#1c1e23", metalness: 0.85, roughness: 0.32 }),
     housing: new THREE.MeshStandardMaterial({ color: "#050506", roughness: 0.75, metalness: 0.2 }),
     element: new THREE.MeshPhysicalMaterial({ color: "#0d0f16", metalness: 0.7, roughness: 0.18, clearcoat: 1 }),
@@ -388,7 +484,7 @@ function createMaterials(spec: BodySpec, initial: THREE.Color) {
     flash: new THREE.MeshPhysicalMaterial({ map: flashMap, roughness: 0.45, metalness: 0, clearcoat: 1 }),
     hole: new THREE.MeshStandardMaterial({ color: "#000000", roughness: 1 }),
     port: new THREE.MeshStandardMaterial({ color: "#07080a", roughness: 0.6, metalness: 0.6 }),
-    textures: [brushed, frost, flashMap],
+    textures: [brushed, brushedN, frost, frostN, machinedN, flashMap],
   };
 }
 
@@ -673,6 +769,7 @@ export const PhoneModel = forwardRef<THREE.Group, PhoneModelProps>(function Phon
       {/* frente: vidrio, pantalla, isla/perforación y auricular */}
       <mesh geometry={geo.front} material={mats.frontGlass} position={[0, 0, d / 2 - 0.0008]} />
       <mesh geometry={geo.screen} material={screenMat} position={[0, 0, front + 0.0004]} />
+      <mesh geometry={geo.screen} material={mats.screenSheen} position={[0, 0, front + 0.0019]} renderOrder={2} />
       {isApple ? (
         <RoundedBox
           args={[0.155, 0.046, 0.0012]}

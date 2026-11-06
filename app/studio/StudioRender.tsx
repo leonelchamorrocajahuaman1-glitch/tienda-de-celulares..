@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import { GLBPhone } from "@/components/three/GLBPhone";
 import { PhoneModel } from "@/components/three/PhoneModel";
+import { StudioFloor } from "@/components/three/StudioFloor";
 import { StudioLights } from "@/components/three/StudioLights";
 import type { CameraPreset } from "@/lib/catalog-data";
 
@@ -36,7 +37,7 @@ function ReadySignal({ id }: { id: number }) {
   return null;
 }
 
-export function StudioRender({ preset, view, color, glb }: { preset: CameraPreset; view: string; color: string; glb?: string }) {
+export function StudioRender({ preset, view, color, glb, floor }: { preset: CameraPreset; view: string; color: string; glb?: string; floor?: boolean }) {
   const [shot, setShot] = useState<Shot>({ preset, view, color, id: 1 });
   const phone = useRef<THREE.Group>(null);
   useEffect(() => {
@@ -61,7 +62,7 @@ export function StudioRender({ preset, view, color, glb }: { preset: CameraPrese
   return (
     <div style={{ width: 900, height: 1100, background: "transparent" }} id="studio">
       <Canvas
-        dpr={1}
+        dpr={1.5}
         camera={{ position: [0, 0, 4.1], fov: 30 }}
         gl={{ preserveDrawingBuffer: true, alpha: true, antialias: true }}
         shadows
@@ -77,6 +78,7 @@ export function StudioRender({ preset, view, color, glb }: { preset: CameraPrese
             <PhoneModel ref={phone} key={shot.preset} color={shot.color} preset={shot.preset} instantColor />
           )}
         </group>
+        {floor && <StudioFloor y={-0.75} />}
         <ContactShadows position={[0, -0.92, 0]} opacity={0.55} scale={4} blur={2.6} far={1.5} frames={Infinity} />
         <ReadySignal id={shot.id} />
       </Canvas>

@@ -3,10 +3,11 @@
 import { ContactShadows, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import gsap from "gsap";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { GLBPhone } from "@/components/three/GLBPhone";
 import { PhoneModel } from "@/components/three/PhoneModel";
+import { StudioFloor } from "@/components/three/StudioFloor";
 import { StudioLights } from "@/components/three/StudioLights";
 import type { CameraPreset } from "@/lib/catalog-data";
 
@@ -99,6 +100,9 @@ export default function ProductViewer({
   reduced: boolean;
   onInteract?: () => void;
 }) {
+  // Piso reflectante solo en pantallas grandes y sin "movimiento reducido" (rendimiento en móviles)
+  const [floor, setFloor] = useState(false);
+  useEffect(() => setFloor(window.matchMedia("(min-width: 768px)").matches && !reduced), [reduced]);
   return (
     <Canvas
       dpr={[1, 2]}
@@ -118,7 +122,8 @@ export default function ProductViewer({
           <PhoneModel color={color} preset={preset} />
         )}
       </group>
-      <ContactShadows position={[0, -0.9, 0]} opacity={0.55} scale={4} blur={2.5} far={1.6} />
+      <ContactShadows position={[0, -0.79, 0]} opacity={0.6} scale={4} blur={2.2} far={1.2} />
+      {floor && <StudioFloor y={-0.795} />}
       <CameraRig view={view} viewNonce={viewNonce} zoomNonce={zoomNonce} zoomDir={zoomDir} autoRotate={autoRotate} reduced={reduced} />
     </Canvas>
   );
