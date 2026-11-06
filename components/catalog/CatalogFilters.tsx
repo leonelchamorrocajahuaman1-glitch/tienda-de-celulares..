@@ -3,6 +3,7 @@
 import { SlidersHorizontal, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { Select } from "@/components/ui/Select";
 import { formatStorage } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -188,22 +189,24 @@ export function SortSelect({ value }: { value: string }) {
   const pathname = usePathname();
   const sp = useSearchParams();
   return (
-    <select
-      aria-label="Ordenar"
-      className="input !w-auto !rounded-full !py-2 text-sm"
+    <Select
+      label="Ordenar productos"
+      className="w-56"
+      buttonClassName="!rounded-full !py-2 text-sm"
       value={value}
-      onChange={(e) => {
+      onChange={(v) => {
         const p = new URLSearchParams(sp.toString());
-        if (e.target.value === "relevance") p.delete("sort");
-        else p.set("sort", e.target.value);
+        if (v === "relevance") p.delete("sort");
+        else p.set("sort", v);
         router.replace(`${pathname}?${p.toString()}`, { scroll: false });
       }}
-    >
-      <option value="relevance">Destacados</option>
-      <option value="bestsellers">Más vendidos</option>
-      <option value="newest">Más recientes</option>
-      <option value="price-asc">Precio: menor a mayor</option>
-      <option value="price-desc">Precio: mayor a menor</option>
-    </select>
+      options={[
+        { value: "relevance", label: "Destacados" },
+        { value: "bestsellers", label: "Más vendidos" },
+        { value: "newest", label: "Más recientes" },
+        { value: "price-asc", label: "Precio: menor a mayor" },
+        { value: "price-desc", label: "Precio: mayor a menor" },
+      ]}
+    />
   );
 }

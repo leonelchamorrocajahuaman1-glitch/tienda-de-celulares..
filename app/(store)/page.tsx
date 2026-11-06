@@ -97,7 +97,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-7xl px-6">
             <SectionHead eyebrow="Nuevos lanzamientos" title={<>Recién llegados a <span className="text-gradient">NEXPHONE</span></>} href="/catalogo?sort=newest" />
           </div>
-          <div className="mx-auto flex max-w-7xl snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-6 [scrollbar-width:thin]">
+          <div className="mx-auto flex max-w-7xl snap-x snap-mandatory scroll-px-6 gap-5 overflow-x-auto px-6 pb-6 [scrollbar-width:thin]">
             {launches.map((p) => (
               <div data-reveal key={p.id} className="w-[78vw] shrink-0 snap-start sm:w-[340px]">
                 <ProductCard product={p} />

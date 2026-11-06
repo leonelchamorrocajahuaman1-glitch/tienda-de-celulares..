@@ -278,7 +278,7 @@ export function ProductDetail({ product }: { product: Product }) {
           ) : (
             <span className="text-emerald-300">En stock · {stock} disponibles</span>
           )}
-          {variant && <span className="ml-auto font-mono text-xs text-zinc-500">SKU {variant.sku}</span>}
+          {variant && <span className="ml-auto hidden font-mono text-xs text-zinc-500 sm:inline">SKU {variant.sku}</span>}
         </div>
 
         {/* Compra */}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { type Address, AddressForm } from "@/components/account/AddressForm";
+import { Select } from "@/components/ui/Select";
 import { useCartQuote } from "@/components/cart/useCartQuote";
 import { cartSubtotal, useCart, useCartHydrated } from "@/lib/cart-store";
 import { formatPEN } from "@/lib/format";
@@ -231,12 +232,13 @@ export function CheckoutForm({ addresses: initialAddresses, settings, profile, m
           <div className="grid gap-4 sm:grid-cols-[150px_1fr]">
             <div>
               <label className="label" htmlFor="doc-type">Documento</label>
-              <select id="doc-type" className="input" value={docType} onChange={(e) => setDocType(e.target.value)} disabled={receipt === "factura"}>
-                <option>DNI</option>
-                <option>CE</option>
-                <option>RUC</option>
-                <option>PASAPORTE</option>
-              </select>
+              <Select
+                id="doc-type"
+                value={docType}
+                onChange={setDocType}
+                disabled={receipt === "factura"}
+                options={["DNI", "CE", "RUC", "PASAPORTE"].map((v) => ({ value: v, label: v === "PASAPORTE" ? "Pasaporte" : v }))}
+              />
             </div>
             <div>
               <label className="label" htmlFor="doc-number">Número {receipt === "boleta" && "(opcional)"}</label>

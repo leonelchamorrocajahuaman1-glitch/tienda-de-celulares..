@@ -3,10 +3,12 @@
 import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { updateProfileAction } from "@/app/(store)/cuenta/actions";
+import { Select } from "@/components/ui/Select";
 
 export function ProfileForm({ initial }: { initial: { full_name: string; phone: string; document_type: string | null; document_number: string | null; email: string } }) {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
+  const [docType, setDocType] = useState(initial.document_type ?? "DNI");
   return (
     <form
       className="grid gap-4 sm:grid-cols-2"
@@ -38,12 +40,13 @@ export function ProfileForm({ initial }: { initial: { full_name: string; phone: 
       </div>
       <div>
         <label className="label" htmlFor="p-dt">Tipo de documento</label>
-        <select id="p-dt" name="document_type" className="input" defaultValue={initial.document_type ?? "DNI"}>
-          <option>DNI</option>
-          <option>CE</option>
-          <option>RUC</option>
-          <option>PASAPORTE</option>
-        </select>
+        <Select
+          id="p-dt"
+          name="document_type"
+          value={docType}
+          onChange={setDocType}
+          options={["DNI", "CE", "RUC", "PASAPORTE"].map((v) => ({ value: v, label: v === "PASAPORTE" ? "Pasaporte" : v }))}
+        />
       </div>
       <div>
         <label className="label" htmlFor="p-dn">Número de documento</label>

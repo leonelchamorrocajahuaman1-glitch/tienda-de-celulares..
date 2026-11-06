@@ -1,10 +1,9 @@
 "use client";
 
-import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import { discountPercent, formatPEN } from "@/lib/format";
 import { defaultVariant, imagesForColor, uniqueColors, variantLabel } from "@/lib/product-helpers";
@@ -26,33 +25,35 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const pct = variant ? discountPercent(variant.price, variant.compare_at_price) : 0;
   const add = useCart((s) => s.add);
 
-  // Microinteracción: inclinación 3D sutil + brillo que sigue al cursor
-  const rx = useSpring(0, { stiffness: 200, damping: 20 });
-  const ry = useSpring(0, { stiffness: 200, damping: 20 });
-  const mx = useMotionValue(50);
-  const my = useMotionValue(50);
-  const glow = useMotionTemplate`radial-gradient(420px circle at ${mx}% ${my}%, rgba(34,211,238,0.12), transparent 45%)`;
+  // Microinteracción: inclinación 3D sutil + brillo que sigue al cursor.
+  // Solo se activa con mouse y mientras el cursor está encima (no crea capas 3D permanentes).
+  const card = useRef<HTMLElement>(null);
+  const resetTilt = () => {
+    const el = card.current;
+    if (!el) return;
+    el.style.transform = "";
+    el.style.removeProperty("--glow");
+  };
 
   return (
-    <motion.article
-      style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
+    <article
+      ref={card}
       onPointerMove={(e) => {
-        if (e.pointerType !== "mouse") return;
-        const r = e.currentTarget.getBoundingClientRect();
+        if (e.pointerType !== "mouse" || !card.current) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const r = card.current.getBoundingClientRect();
         const px = (e.clientX - r.left) / r.width;
         const py = (e.clientY - r.top) / r.height;
-        ry.set((px - 0.5) * 7);
-        rx.set(-(py - 0.5) * 7);
-        mx.set(px * 100);
-        my.set(py * 100);
+        card.current.style.transform = `perspective(900px) rotateX(${(-(py - 0.5) * 6).toFixed(2)}deg) rotateY(${((px - 0.5) * 6).toFixed(2)}deg)`;
+        card.current.style.setProperty(
+          "--glow",
+          `radial-gradient(420px circle at ${(px * 100).toFixed(1)}% ${(py * 100).toFixed(1)}%, rgba(34,211,238,0.12), transparent 45%)`,
+        );
       }}
-      onPointerLeave={() => {
-        rx.set(0);
-        ry.set(0);
-      }}
-      className="group card relative flex flex-col overflow-hidden p-4 transition-colors hover:border-white/15"
+      onPointerLeave={resetTilt}
+      className="group card relative flex flex-col overflow-hidden p-4 transition-[transform,border-color] duration-300 ease-out hover:border-white/15"
     >
-      <motion.div className="pointer-events-none absolute inset-0" style={{ background: glow }} />
+      <div className="pointer-events-none absolute inset-0" style={{ background: "var(--glow, none)" }} />
       <div className="absolute left-4 top-4 z-10 flex flex-wrap gap-1.5">
         {product.is_new && (
           <span className="rounded-full bg-cyan-400/15 px-2.5 py-1 font-mono text-[0.6rem] tracking-widest text-cyan-300 ring-1 ring-cyan-400/30">
@@ -150,6 +151,6 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           </button>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }

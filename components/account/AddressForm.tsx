@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { saveAddressAction } from "@/app/(store)/cuenta/actions";
+import { Select } from "@/components/ui/Select";
 import { PERU_DEPARTMENTS } from "@/lib/peru";
 
 export interface Address {
@@ -33,6 +34,7 @@ export function AddressForm({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [department, setDepartment] = useState(initial?.department || "Lima");
 
   return (
     <form
@@ -74,11 +76,13 @@ export function AddressForm({
       </div>
       <div>
         <label className="label" htmlFor="a-dep">Departamento</label>
-        <select id="a-dep" name="department" required className="input" defaultValue={initial?.department ?? "Lima"}>
-          {PERU_DEPARTMENTS.map((d) => (
-            <option key={d}>{d}</option>
-          ))}
-        </select>
+        <Select
+          id="a-dep"
+          name="department"
+          value={department}
+          onChange={setDepartment}
+          options={PERU_DEPARTMENTS.map((d) => ({ value: d, label: d }))}
+        />
       </div>
       <div>
         <label className="label" htmlFor="a-prov">Provincia</label>
