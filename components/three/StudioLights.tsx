@@ -10,7 +10,7 @@ import { Environment, Lightformer } from "@react-three/drei";
 export function StudioLights({ intensity = 1 }: { intensity?: number }) {
   return (
     <>
-      <ambientLight intensity={0.3 * intensity} />
+      <ambientLight intensity={0.18 * intensity} />
       <directionalLight position={[3, 5, 4]} intensity={1.4 * intensity} castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-4, 2, -3]} intensity={0.9 * intensity} color="#8b5cf6" />
       <Environment resolution={256} frames={1}>
@@ -21,6 +21,9 @@ export function StudioLights({ intensity = 1 }: { intensity?: number }) {
         <Lightformer form="rect" intensity={2.4} position={[5, 0.5, 3.5]} scale={[1.2, 9, 1]} />
         {/* Contraluz superior */}
         <Lightformer form="rect" intensity={3} position={[0, 7, -3]} scale={[10, 2, 1]} />
+        {/* Softbox trasero grande: degradado suave sobre el vidrio posterior */}
+        <Lightformer form="rect" intensity={2.2} position={[-3, 4.5, -6]} scale={[9, 5, 1]} />
+        <Lightformer form="circle" intensity={1.4} position={[3.5, -2, -5]} scale={3} />
         {/* Tiras traseras para lecturas desde atrás */}
         <Lightformer form="rect" intensity={2.6} position={[-4, 2, -5]} scale={[6, 3, 1]} />
         <Lightformer form="rect" intensity={1.8} position={[5, 1, -4]} scale={[1.2, 8, 1]} />
